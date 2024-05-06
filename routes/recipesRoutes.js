@@ -106,13 +106,15 @@ router.put("/:id", authenticateToken, async (req, res) => {
 router.delete("/:id", authenticateToken, async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
-    if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-    if (recipe.creator.toString() !== req.user.userId)
+    if (!recipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+    if (recipe.creator.toString() !== req.user.userId) {
       return res
         .status(403)
         .json({ error: "Not authorized to delete this recipe" });
-
-    await recipe.remove();
+    }
+    await Recipe.findByIdAndDelete(req.params.id); // Updated method to delete recipe
     res.json({ message: "Recipe deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
