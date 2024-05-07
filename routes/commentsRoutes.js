@@ -42,6 +42,26 @@ router.get("/recipe/:recipeId", async (req, res) => {
   }
 });
 
+// UPDATE a comment
+router.put("/:id", authenticateToken, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+    if (comment.author.toString() !== req.user.userId) {
+      return res
+        .status(403)
+        .json({ error: "User is not authorized to edit this comment" });
+    }
+    comment.text = req.body.text || comment.text;
+    await comment.save();
+    res.json(comment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // DELETE a comment
 router.delete("/:id", authenticateToken, async (req, res) => {
   try {
