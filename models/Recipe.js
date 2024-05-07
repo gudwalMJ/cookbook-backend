@@ -21,6 +21,7 @@ const recipeSchema = new mongoose.Schema(
       enum: ["Easy", "Medium", "Hard"],
       required: true,
     },
+    preparationTime: { type: Number, required: false },
     categories: [
       {
         type: String,

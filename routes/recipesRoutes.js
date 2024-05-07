@@ -3,14 +3,14 @@ const router = express.Router();
 const Recipe = require("../models/Recipe");
 const authenticateToken = require("../middleware/authenticateToken");
 
-module.exports = router;
-
+// POST a recipe
 router.post("/", authenticateToken, async (req, res) => {
   const {
     title,
     ingredients,
     description,
     preparationSteps,
+    preparationTime,
     imageUrls,
     servings,
     starRating,
@@ -24,6 +24,7 @@ router.post("/", authenticateToken, async (req, res) => {
       ingredients,
       description,
       preparationSteps,
+      preparationTime,
       imageUrls,
       creator: req.user.userId, //Assume req.user is populated from the token
       servings,
@@ -31,12 +32,14 @@ router.post("/", authenticateToken, async (req, res) => {
       difficulty,
       categories,
     });
-    await newRecipe.save(), res.status(201).json(newRecipe);
+    await newRecipe.save();
+    res.status(201).json(newRecipe);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
+// GET all recipes
 router.get("/", async (req, res) => {
   const { category, creator } = req.query;
   let query = {};
@@ -51,6 +54,35 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// GET (SEARCH) a recipe
+router.get("/search", async (req, res) => {
+  try {
+    const { ingredients, starRating, difficulty, preparationTime } = req.query;
+
+    let query = {};
+
+    if (ingredients) {
+      query["ingredients.name"] = { $regex: ingredients, $options: "i" }; // Case sensitive search
+    }
+    if (starRating) {
+      query.starRating = { $gte: Number(starRating) }; // Recipes with rating >= starRating
+    }
+    if (difficulty) {
+      query.difficulty = difficulty;
+    }
+    if (preparationTime) {
+      query.preparationTime = { $lte: Number(preparationTime) }; // Recipes with prep time
+    }
+
+    const recipes = await Recipe.find(query);
+    res.json(recipes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET a recipe by id
 router.get("/:id", async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id).populate(
@@ -64,12 +96,14 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// PUT a recipe
 router.put("/:id", authenticateToken, async (req, res) => {
   const {
     title,
     ingredients,
     description,
     preparationSteps,
+    preparationTime,
     imageUrls,
     servings,
     starRating,
@@ -90,6 +124,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
     recipe.ingredients = ingredients;
     recipe.description = description;
     recipe.preparationSteps = preparationSteps;
+    recipe.preparationTime = preparationTime;
     recipe.imageUrls = imageUrls;
     recipe.servings = servings;
     recipe.starRating = starRating;
@@ -103,6 +138,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
   }
 });
 
+// DELETE a recipe
 router.delete("/:id", authenticateToken, async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
@@ -120,3 +156,5 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+module.exports = router;
