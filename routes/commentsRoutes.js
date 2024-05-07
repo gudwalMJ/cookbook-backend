@@ -4,6 +4,8 @@ const authenticateToken = require("../middleware/authenticateToken");
 const Comment = require("../models/Comment");
 const Recipe = require("../models/Recipe");
 
+module.exports = router;
+
 // POST a comment
 router.post("/", authenticateToken, async (req, res) => {
   const { text, recipeId } = req.body;
