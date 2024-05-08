@@ -1,12 +1,8 @@
 const bcrypt = require("bcryptjs");
+const newPassword = "newPassword123";
+const storedHash =
+  "$2a$10$wDCi0GHYhbV6/18oMZgxJu6ag.LqfVjHqlZWtWR3zgDMwuSFfdpLO"; // use the actual hash from your DB after update
 
-async function testBcrypt() {
-  const password = "password123";
-  const hash = await bcrypt.hash(password, 10);
-  console.log("Hash:", hash);
-
-  const isMatch = await bcrypt.compare(password, hash);
-  console.log("Password match:", isMatch);
-}
-
-testBcrypt();
+bcrypt.compare(newPassword, storedHash, (err, result) => {
+  console.log("Manual verification result with updated hash:", result);
+});
