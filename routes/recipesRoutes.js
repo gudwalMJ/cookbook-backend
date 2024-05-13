@@ -55,6 +55,16 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET popular recipes based on likes
+router.get("/popular", async (req, res) => {
+  try {
+    const popularRecipes = await Recipe.find().sort({ likes: -1 }).limit(10);
+    res.json(popularRecipes);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
 // GET (SEARCH) a recipe
 router.get("/search", async (req, res) => {
   try {
