@@ -68,27 +68,17 @@ router.get("/popular", async (req, res) => {
 // GET (SEARCH) a recipe
 router.get("/search", async (req, res) => {
   try {
-    const { ingredients, starRating, difficulty, preparationTime } = req.query;
+    const { query } = req.query; // Ensure 'query' is the parameter used in the frontend request
+    let searchCriteria = {};
 
-    let query = {};
-
-    if (ingredients) {
-      query["ingredients.name"] = { $regex: ingredients, $options: "i" }; // Case sensitive search
-    }
-    if (starRating) {
-      query.starRating = { $gte: Number(starRating) }; // Recipes with rating >= starRating
-    }
-    if (difficulty) {
-      query.difficulty = difficulty;
-    }
-    if (preparationTime) {
-      query.preparationTime = { $lte: Number(preparationTime) }; // Recipes with prep time
+    if (query) {
+      searchCriteria.title = { $regex: new RegExp(query, "i") }; // Case-insensitive regex search
     }
 
-    const recipes = await Recipe.find(query);
+    const recipes = await Recipe.find(searchCriteria);
     res.json(recipes);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Error searching recipes" });
   }
 });
 
