@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const authenticateToken = require("../middleware/authenticateToken");
 const User = require("../models/User");
 
 const secretKey = process.env.JWT_SECRET;
@@ -39,12 +38,9 @@ router.post("/login", async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
-    // Create token
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || "your_secret_key",
-      { expiresIn: "24h" }
-    );
+    const token = jwt.sign({ userId: user._id }, secretKey, {
+      expiresIn: "24h",
+    });
     res.json({ token });
   } catch (error) {
     res.status(500).json({ error: "Server error during login" });
