@@ -1,3 +1,4 @@
+// routes/userRoutes.js
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
@@ -19,7 +20,7 @@ router.get("/me", authenticateToken, async (req, res) => {
 
 // PUT update the current user's profile
 router.put("/me", authenticateToken, async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, password } = req.body;
 
   try {
     const user = await User.findById(req.user.userId);
@@ -29,7 +30,6 @@ router.put("/me", authenticateToken, async (req, res) => {
 
     // Update fields if they are provided
     if (username) user.username = username;
-    if (email) user.email = email;
     if (password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
@@ -38,11 +38,11 @@ router.put("/me", authenticateToken, async (req, res) => {
     await user.save();
     res.status(200).json({
       message: "Profile updated successfully",
-      data: { username: user.username, email: user.email },
+      data: { username: user.username },
     });
   } catch (error) {
     if (error.code === 11000) {
-      res.status(400).json({ error: "Username or email already exists" });
+      res.status(400).json({ error: "Username already exists" });
     } else {
       res.status(500).json({ error: error.message });
     }
