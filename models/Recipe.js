@@ -1,5 +1,10 @@
 const mongoose = require("mongoose");
 
+const ratingSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  rating: { type: Number, min: 1, max: 5, required: true },
+});
+
 const recipeSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
@@ -15,7 +20,7 @@ const recipeSchema = new mongoose.Schema(
     likes: { type: Number, default: 0 },
     likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     servings: { type: Number, required: true },
-    starRating: { type: Number, min: 1, max: 5 },
+    ratings: [ratingSchema], // Array of ratings
     difficulty: {
       type: String,
       enum: ["Easy", "Medium", "Hard"],
@@ -40,8 +45,18 @@ const recipeSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true }, // Ensure virtual fields are included when converting to JSON
+    toObject: { virtuals: true }, // Ensure virtual fields are included when converting to Object
+  }
 );
+
+recipeSchema.virtual("averageRating").get(function () {
+  if (this.ratings.length === 0) return 0;
+  const sum = this.ratings.reduce((acc, rating) => acc + rating.rating, 0);
+  return sum / this.ratings.length;
+});
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
 module.exports = Recipe;

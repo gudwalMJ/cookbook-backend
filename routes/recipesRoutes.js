@@ -138,6 +138,66 @@ router.put("/:id", authenticateToken, async (req, res) => {
   }
 });
 
+// POST rating for a recipe
+router.post("/:id/rate", authenticateToken, async (req, res) => {
+  const { rating } = req.body;
+  const userId = req.user.userId;
+
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ error: "Rating must be between 1 and 5" });
+  }
+
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    // Check if user already rated this recipe
+    const existingRating = recipe.ratings.find(
+      (r) => r.user.toString() === userId
+    );
+    if (existingRating) {
+      // Update existing rating
+      existingRating.rating = rating;
+    } else {
+      // Add new rating
+      recipe.ratings.push({ user: userId, rating });
+    }
+
+    await recipe.save();
+    res.json({ averageRating: recipe.averageRating.toFixed(2) });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// PUT like a recipe
+router.put("/:id/like", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    if (recipe.likedBy.includes(userId)) {
+      return res
+        .status(400)
+        .json({ error: "You have already liked this recipe" });
+    }
+
+    recipe.likes += 1;
+    recipe.likedBy.push(userId);
+
+    await recipe.save();
+    res.json({ likes: recipe.likes });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // DELETE a recipe
 router.delete("/:id", authenticateToken, async (req, res) => {
   try {
