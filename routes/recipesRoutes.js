@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const Recipe = require("../models/Recipe");
 const authenticateToken = require("../middleware/authenticateToken");
+const isAdmin = require("../middleware/isAdmin");
 
-// POST a recipe
+// POST a recipe (both admin and regular users can add recipes)
 router.post("/", authenticateToken, async (req, res) => {
   const {
     title,
@@ -13,7 +14,6 @@ router.post("/", authenticateToken, async (req, res) => {
     preparationTime,
     imageUrls,
     servings,
-    starRating,
     difficulty,
     categories,
   } = req.body;
@@ -26,9 +26,8 @@ router.post("/", authenticateToken, async (req, res) => {
       preparationSteps,
       preparationTime,
       imageUrls,
-      creator: req.user.userId, //Assume req.user is populated from the token
+      creator: req.user.userId,
       servings,
-      starRating,
       difficulty,
       categories,
     });
@@ -96,7 +95,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// PUT a recipe
+// PUT a recipe (only by the creator or admin)
 router.put("/:id", authenticateToken, async (req, res) => {
   const {
     title,
@@ -106,7 +105,6 @@ router.put("/:id", authenticateToken, async (req, res) => {
     preparationTime,
     imageUrls,
     servings,
-    starRating,
     difficulty,
     categories,
   } = req.body;
@@ -114,10 +112,13 @@ router.put("/:id", authenticateToken, async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-    if (recipe.creator.toString() !== req.user.userId)
+
+    // Allow update by admin or the creator of the recipe
+    if (recipe.creator.toString() !== req.user.userId && !req.user.isAdmin) {
       return res
         .status(403)
         .json({ error: "Not authorized to update this recipe" });
+    }
 
     // Update fields
     recipe.title = title;
@@ -127,7 +128,6 @@ router.put("/:id", authenticateToken, async (req, res) => {
     recipe.preparationTime = preparationTime;
     recipe.imageUrls = imageUrls;
     recipe.servings = servings;
-    recipe.starRating = starRating;
     recipe.difficulty = difficulty;
     recipe.categories = categories;
 
@@ -198,19 +198,22 @@ router.put("/:id/like", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE a recipe
+// DELETE a recipe (only by the creator or admin)
 router.delete("/:id", authenticateToken, async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) {
       return res.status(404).json({ error: "Recipe not found" });
     }
-    if (recipe.creator.toString() !== req.user.userId) {
+
+    // Allow deletion by admin or the creator of the recipe
+    if (recipe.creator.toString() !== req.user.userId && !req.user.isAdmin) {
       return res
         .status(403)
         .json({ error: "Not authorized to delete this recipe" });
     }
-    await Recipe.findByIdAndDelete(req.params.id); // Updated method to delete recipe
+
+    await Recipe.findByIdAndDelete(req.params.id);
     res.json({ message: "Recipe deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
