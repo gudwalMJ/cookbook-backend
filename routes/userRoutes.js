@@ -31,8 +31,7 @@ router.put("/me", authenticateToken, async (req, res) => {
     // Update fields if they are provided
     if (username) user.username = username;
     if (password) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+      user.password = password; // Assign directly to trigger pre-save middleware
     }
 
     await user.save();
