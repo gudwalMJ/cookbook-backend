@@ -5,7 +5,7 @@ const isAdmin = async (req, res, next) => {
   const userId = req.user.userId;
   try {
     const user = await User.findById(userId);
-    if (user && user.role === "admin") {
+    if (user && user.isAdmin) {
       next();
     } else {
       res.status(403).json({ error: "Access denied" });

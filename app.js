@@ -1,4 +1,3 @@
-// app.js
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -23,7 +22,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.use("/api/auth", authRoutes);
-app.use("/api/recipes", recipesRoutes);
+app.use("/api/recipes", recipesRoutes); // Public access to recipe routes
 app.use("/api/comments", commentsRoutes);
 app.use("/api/users", userRoutes);
 
