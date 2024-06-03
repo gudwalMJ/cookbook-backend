@@ -7,8 +7,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   profileImage: {
     type: String,
-    default:
-      "https://www.shareicon.net/data/128x128/2016/09/01/822751_user_512x512.png",
+    default: "/public/images/profiles/profile_1.png",
   },
   isAdmin: { type: Boolean, default: false }, // Admin field
 });

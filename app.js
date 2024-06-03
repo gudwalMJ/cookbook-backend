@@ -20,6 +20,7 @@ mongoose
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(express.static("public"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/recipes", recipesRoutes); // Public access to recipe routes
