@@ -1,4 +1,3 @@
-// routes/userRoutes.js
 const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
@@ -6,13 +5,16 @@ const User = require("../models/User");
 
 // GET the current user's profile
 router.get("/me", authenticateToken, async (req, res) => {
+  console.log("Fetching current user profile"); // Debugging log
   try {
     const user = await User.findById(req.user.userId).select("-password");
     if (!user) {
+      console.log("User not found"); // Debugging log
       return res.status(404).json({ message: "User not found" });
     }
     res.json(user);
   } catch (error) {
+    console.error("Error fetching user profile:", error.message); // Debugging log
     res.status(500).json({ error: error.message });
   }
 });
@@ -29,10 +31,10 @@ router.put("/me", authenticateToken, async (req, res) => {
 
     // Update fields if they are provided
     if (username) user.username = username;
+    if (profileImage) user.profileImage = profileImage;
     if (password) {
       user.password = password; // Assign directly to trigger pre-save middleware
     }
-    if (profileImage) user.profileImage = profileImage;
 
     await user.save();
     res.status(200).json({
