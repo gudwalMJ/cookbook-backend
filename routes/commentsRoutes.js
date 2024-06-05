@@ -19,7 +19,6 @@ router.post("/", authenticateToken, async (req, res) => {
       author: req.user.userId,
       recipe: recipeId,
       likes: [],
-      replies: [],
     });
 
     await comment.save();
@@ -32,12 +31,9 @@ router.post("/", authenticateToken, async (req, res) => {
 // GET comments for a specific recipe
 router.get("/recipe/:recipeId", async (req, res) => {
   try {
-    const comments = await Comment.find({ recipe: req.params.recipeId })
-      .populate("author", "username")
-      .populate({
-        path: "replies",
-        populate: { path: "author", select: "username" },
-      });
+    const comments = await Comment.find({
+      recipe: req.params.recipeId,
+    }).populate("author", "username");
     res.json(comments);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -80,34 +76,6 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     await Comment.findByIdAndDelete(req.params.id);
     res.json({ message: "Comment deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// POST a reply to a comment
-router.post("/:id/reply", authenticateToken, async (req, res) => {
-  const { text } = req.body;
-
-  try {
-    const comment = await Comment.findById(req.params.id);
-    if (!comment) {
-      return res.status(404).json({ error: "Comment not found" });
-    }
-
-    const reply = new Comment({
-      text,
-      author: req.user.userId,
-      recipe: comment.recipe,
-      likes: [],
-      replies: [],
-    });
-
-    await reply.save();
-    comment.replies.push(reply._id);
-    await comment.save();
-
-    res.status(201).json(reply);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
