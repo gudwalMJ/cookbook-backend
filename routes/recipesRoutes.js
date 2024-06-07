@@ -67,11 +67,17 @@ router.get("/popular", async (req, res) => {
 // GET (SEARCH) a recipe
 router.get("/search", async (req, res) => {
   try {
-    const { query } = req.query; // Ensure 'query' is the parameter used in the frontend request
+    const { query, difficulty, category } = req.query;
     let searchCriteria = {};
 
     if (query) {
       searchCriteria.title = { $regex: new RegExp(query, "i") }; // Case-insensitive regex search
+    }
+    if (difficulty) {
+      searchCriteria.difficulty = difficulty;
+    }
+    if (category) {
+      searchCriteria.categories = category;
     }
 
     const recipes = await Recipe.find(searchCriteria);
@@ -80,7 +86,6 @@ router.get("/search", async (req, res) => {
     res.status(500).json({ error: "Error searching recipes" });
   }
 });
-
 // GET a recipe by id
 router.get("/:id", async (req, res) => {
   try {
