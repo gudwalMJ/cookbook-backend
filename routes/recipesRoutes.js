@@ -86,6 +86,7 @@ router.get("/search", async (req, res) => {
     res.status(500).json({ error: "Error searching recipes" });
   }
 });
+
 // GET a recipe by id
 router.get("/:id", async (req, res) => {
   try {
