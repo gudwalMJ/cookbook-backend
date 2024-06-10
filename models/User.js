@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "/public/images/profiles/profile_1.png",
   },
-  isAdmin: { type: Boolean, default: false }, // Admin field
+  isAdmin: { type: Boolean, default: false },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }], // Add this line
 });
 
 userSchema.pre("save", async function (next) {
