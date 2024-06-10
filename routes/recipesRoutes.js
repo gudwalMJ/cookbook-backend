@@ -40,14 +40,36 @@ router.post("/", authenticateToken, async (req, res) => {
 
 // GET all recipes
 router.get("/", async (req, res) => {
-  const { category, creator } = req.query;
+  const { category, creator, sortBy } = req.query;
   let query = {};
+  let sortCriteria = {};
 
   if (category) query.categories = category;
   if (creator) query.creator = creator;
 
+  if (sortBy) {
+    switch (sortBy) {
+      case "newest":
+        sortCriteria = { createdAt: -1 };
+        break;
+      case "oldest":
+        sortCriteria = { createdAt: 1 };
+        break;
+      case "mostPopular":
+        sortCriteria = { likes: -1 };
+        break;
+      case "highestRated":
+        sortCriteria = { averageRating: -1 };
+        break;
+      default:
+        sortCriteria = {};
+    }
+  }
+
   try {
-    const recipes = await Recipe.find(query).populate("creator", "username");
+    const recipes = await Recipe.find(query)
+      .populate("creator", "username")
+      .sort(sortCriteria);
     res.json(recipes);
   } catch (error) {
     res.status(500).json({ error: error.message });
