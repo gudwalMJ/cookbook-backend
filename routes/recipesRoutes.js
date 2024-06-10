@@ -219,9 +219,51 @@ router.put("/:id/like", authenticateToken, async (req, res) => {
     recipe.likes += 1;
     recipe.likedBy.push(userId);
 
+    const user = await User.findById(userId);
+    user.likedRecipes.push(recipe._id);
+
     await recipe.save();
-    res.json({ likes: recipe.likes });
+    await user.save();
+
+    res.json({ likes: recipe.likes, likedBy: recipe.likedBy });
   } catch (error) {
+    console.error("Error liking recipe:", error.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// PUT unlike a recipe
+router.put("/:id/unlike", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    if (!recipe.likedBy.includes(userId)) {
+      return res
+        .status(400)
+        .json({ error: "You have not liked this recipe yet" });
+    }
+
+    recipe.likes -= 1;
+    recipe.likedBy = recipe.likedBy.filter(
+      (likedUserId) => likedUserId.toString() !== userId
+    );
+
+    const user = await User.findById(userId);
+    user.likedRecipes = user.likedRecipes.filter(
+      (likedRecipeId) => likedRecipeId.toString() !== recipe._id.toString()
+    );
+
+    await recipe.save();
+    await user.save();
+
+    res.json({ likes: recipe.likes, likedBy: recipe.likedBy });
+  } catch (error) {
+    console.error("Error unliking recipe:", error.message);
     res.status(500).json({ error: "Server error" });
   }
 });

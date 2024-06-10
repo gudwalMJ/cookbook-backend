@@ -10,18 +10,17 @@ const userSchema = new mongoose.Schema({
     default: "/public/images/profiles/profile_1.png",
   },
   isAdmin: { type: Boolean, default: false },
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }], // Add this line
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
+  likedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
 });
 
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    console.log("Hashed password during save:", this.password); // Log during save
   }
   next();
 });
 
 const User = mongoose.model("User", userSchema);
-
 module.exports = User;
