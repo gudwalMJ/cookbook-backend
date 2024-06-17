@@ -41,9 +41,10 @@ router.post("/", authenticateToken, async (req, res) => {
 
 // GET all recipes
 router.get("/", async (req, res) => {
-  const { category, creator, sortBy } = req.query;
+  const { category, creator, sortBy, limit } = req.query;
   let query = {};
   let sortCriteria = {};
+  let limitNumber = parseInt(limit) || 0; // Default to no limit
 
   if (category) query.categories = category;
   if (creator) query.creator = creator;
@@ -70,7 +71,8 @@ router.get("/", async (req, res) => {
   try {
     const recipes = await Recipe.find(query)
       .populate("creator", "username")
-      .sort(sortCriteria);
+      .sort(sortCriteria)
+      .limit(limitNumber); // Apply limit to query
     res.json(recipes);
   } catch (error) {
     res.status(500).json({ error: error.message });
