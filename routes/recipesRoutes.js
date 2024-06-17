@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Recipe = require("../models/Recipe");
+const User = require("../models/User");
 const authenticateToken = require("../middleware/authenticateToken");
 const isAdmin = require("../middleware/isAdmin");
 
@@ -220,6 +221,10 @@ router.put("/:id/like", authenticateToken, async (req, res) => {
     recipe.likedBy.push(userId);
 
     const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     user.likedRecipes.push(recipe._id);
 
     await recipe.save();
@@ -254,6 +259,10 @@ router.put("/:id/unlike", authenticateToken, async (req, res) => {
     );
 
     const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     user.likedRecipes = user.likedRecipes.filter(
       (likedRecipeId) => likedRecipeId.toString() !== recipe._id.toString()
     );
