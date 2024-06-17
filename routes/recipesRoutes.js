@@ -90,11 +90,17 @@ router.get("/popular", async (req, res) => {
 // GET (SEARCH) a recipe
 router.get("/search", async (req, res) => {
   try {
-    const { query, difficulty, category } = req.query;
+    const { query, difficulty, category, sortBy } = req.query;
     let searchCriteria = {};
+    let sortCriteria = {};
 
     if (query) {
-      searchCriteria.title = { $regex: new RegExp(query, "i") }; // Case-insensitive regex search
+      searchCriteria = {
+        $or: [
+          { title: { $regex: new RegExp(query, "i") } },
+          { "ingredients.name": { $regex: new RegExp(query, "i") } },
+        ],
+      };
     }
     if (difficulty) {
       searchCriteria.difficulty = difficulty;
@@ -103,7 +109,26 @@ router.get("/search", async (req, res) => {
       searchCriteria.categories = category;
     }
 
-    const recipes = await Recipe.find(searchCriteria);
+    if (sortBy) {
+      switch (sortBy) {
+        case "newest":
+          sortCriteria = { createdAt: -1 };
+          break;
+        case "oldest":
+          sortCriteria = { createdAt: 1 };
+          break;
+        case "mostPopular":
+          sortCriteria = { likes: -1 };
+          break;
+        case "highestRated":
+          sortCriteria = { averageRating: -1 };
+          break;
+        default:
+          sortCriteria = {};
+      }
+    }
+
+    const recipes = await Recipe.find(searchCriteria).sort(sortCriteria);
     res.json(recipes);
   } catch (error) {
     res.status(500).json({ error: "Error searching recipes" });
