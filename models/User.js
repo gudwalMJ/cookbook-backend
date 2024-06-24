@@ -7,7 +7,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   profileImage: {
     type: String,
-    default: "/public/images/profiles/profile_1.png",
+    default: function () {
+      return this.isAdmin
+        ? "/public/images/profiles/admin.webp"
+        : "/public/images/profiles/profile_1.png";
+    },
   },
   isAdmin: { type: Boolean, default: false },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
@@ -19,6 +23,15 @@ userSchema.pre("save", async function (next) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   }
+
+  // Ensure only admin users can have the admin profile image
+  if (
+    this.profileImage === "/public/images/profiles/admin.webp" &&
+    !this.isAdmin
+  ) {
+    this.profileImage = "/public/images/profiles/profile_1.png";
+  }
+
   next();
 });
 
